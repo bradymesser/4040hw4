@@ -17,6 +17,46 @@ The name of the reshape callback function is: handleReshape
 using namespace std;
 OIIO_NAMESPACE_USING;
 
+int WIDTH = 500;
+int HEIGHT = 500;
+
+// A filter used for convolving
+class Filter {
+  public:
+    int size;
+    float ** array;
+
+    Filter() {
+      size = 0;
+      array = NULL;
+    }
+
+    Filter(char * file) {
+      ifstream in;
+      in.open(file);
+      in >> size;
+      array = new float*[size];
+      for(int i = 0; i < size; ++i) {
+          array[i] = new float[size];
+      }
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          in >> array[i][j];
+        }
+      }
+    }
+
+    //for debug purposes
+    void print() {
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          cout << array[i][j] << " ";
+        }
+        cout << endl;
+      }
+    }
+};
+
 // The class that represents an image
 class Image {
   private:
@@ -206,9 +246,14 @@ class Image {
         j+= channels;
       }
     }
+
+    void convolve(Filter filter) {
+      cout << "Convolving";
+    }
 };
 
 Image image = Image();
+Filter filt = Filter();
 
 void handleKey(unsigned char key, int x, int y) {
   switch(key){
@@ -227,6 +272,10 @@ void handleKey(unsigned char key, int x, int y) {
     case 'i':
     case 'I':
       image.invert();
+      break;
+    case 'c':
+    case 'C':
+      image.convolve(filt);
       break;
     default:		// not a valid key -- just ignore it
       return;
