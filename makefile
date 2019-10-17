@@ -6,7 +6,7 @@
 CC      = g++
 
 # auxiliary flags
-CFLAGS	= -g
+CFLAGS	= -g -Wall
 
 #first set up the platform dependent variables
 ifeq ("$(shell uname)", "Darwin")
@@ -47,3 +47,8 @@ ${PROJECT} : ${OBJECTS}
 #this will clean up all temporary files created by make all
 clean:
 	rm -f core.* *.o *~ ${PROJECT}
+
+run:
+	-make clean
+	-make default
+	./convolve filters/cross.filt images/checkers.png

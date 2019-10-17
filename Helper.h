@@ -22,6 +22,8 @@ int HEIGHT = 500;
 
 // A filter used for convolving
 class Filter {
+  private:
+    bool flipped;
   public:
     int size;
     float ** array;
@@ -29,6 +31,7 @@ class Filter {
     Filter() {
       size = 0;
       array = NULL;
+      flipped = false;
     }
 
     Filter(char * file) {
@@ -44,6 +47,7 @@ class Filter {
           in >> array[i][j];
         }
       }
+      flipped = false;
     }
 
     //for debug purposes
@@ -54,6 +58,25 @@ class Filter {
         }
         cout << endl;
       }
+    }
+
+    void flip() {
+      float temp[size][size];
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          temp[i][j] = array[size-1-i][size-1-j];
+        }
+      }
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          array[i][j] = temp[i][j];
+        }
+      }
+      flipped = !flipped;
+    }
+
+    bool isFlipped() {
+      return flipped;
     }
 };
 
@@ -95,6 +118,16 @@ class Image {
       ImageInput::destroy (in);
     }
 
+    // copy constructor
+    void copy(const Image& img) {
+      width = img.width;
+      height = img.height;
+      channels = img.channels;
+      for (int i = 0; i < width * height * channels; i++) {
+        pixels[i] = img.pixels[i];
+      }
+      ext = img.ext;
+    }
     //writes the object to a file
     void writeImage(string filename) {
       const int xres = this->width, yres = this->height;
@@ -248,11 +281,61 @@ class Image {
     }
 
     void convolve(Filter filter) {
-      cout << "Convolving";
+      if (!filter.isFlipped()) {
+        filter.flip();
+      }
+      // cout << "Width: " << width << " Height: " << height << " Channels: " << channels << endl;
+      unsigned char pix[height][width * channels];
+      int temp[filter.size][filter.size];
+      int k = 0;
+      int l = 0;
+      for (int i = 0; i < width * height * channels; i++) {
+        pix[k][l] = pixels[i];
+        l++;
+        if (l == width * channels) {
+          l = 0;
+          k++;
+        }
+      }
+      k = 0;
+      int a = 0;
+      int b = 0;
+      for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width * channels; j+=channels) {
+          for (k = j; k < j + channels; k++) {
+            // Populate the array of pixels to multiply against filter
+            for (int z = i - (filter.size/2); z <= i + (filter.size / 2); z++) {
+              for (int y = k - ((filter.size/2) * channels); y <= (k + ((filter.size / 2) * channels)); y+=channels) {
+                if (z >= 0 && z < height && y >= 0 && y < width * channels) {
+                  temp[a][b] = pix[z][y];
+                }
+                else {
+                  temp[a][b] = -1;
+                }
+                b++;  // next column
+              }
+              a++;  // next row
+              b = 0;  // reset to first column
+            }
+            a = 0;
+            b = 0;
+            // if (i == 1 && j== 3) {
+            //   cout << endl;
+            //   for (int z = 0; z < filter.size; z++) {
+            //     for (int y = 0; y < filter.size; y++) {
+            //       printf("%4d ",temp[z][y]);
+            //     }
+            //     cout << endl;
+            //   }
+            // }
+          }
+        }
+      }
     }
 };
 
 Image image = Image();
+Image originalImage = Image();
 Filter filt = Filter();
 
 void handleKey(unsigned char key, int x, int y) {
@@ -276,6 +359,10 @@ void handleKey(unsigned char key, int x, int y) {
     case 'c':
     case 'C':
       image.convolve(filt);
+      break;
+    case 'r':
+    case 'R':
+      image.copy(originalImage);
       break;
     default:		// not a valid key -- just ignore it
       return;
