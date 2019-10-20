@@ -1,4 +1,3 @@
-
 #sample makefile for CPSC 4040/6040
 #author: Ioannis Karamouzas (ioannis@clemson.edu)
 
@@ -29,12 +28,6 @@ default: ${PROJECT}
 ${PROJECT} : ${OBJECTS}
 	${CC} ${CFLAGS} -o ${PROJECT} ${OBJECTS} ${LDFLAGS}
 
-# PROJECT2 = compose
-# OBJECTS2 = compose.o
-# compose: ${PROJECT2}
-# ${PROJCT2} : ${OBJECTS2}
-# 	${CC} ${CFLAGS} -o ${PROJECT2} ${OBJECTS2} ${LDFLAGS}
-
 #this generically compiles each .cpp to a .o file
 %.o: %.cpp
 	${CC} -c ${CFLAGS} $<
@@ -42,7 +35,6 @@ ${PROJECT} : ${OBJECTS}
 #it does not check for .h files dependencies, but you could add that, e.g.
 #somfile.o    : somefile.cpp someheader.h
 #	${CC} ${CFLAGS} -c somefile.cpp
-
 
 #this will clean up all temporary files created by make all
 clean:
@@ -52,3 +44,8 @@ run:
 	-make clean
 	-make default
 	./convolve filters/cross.filt images/checkers.png
+
+square:
+	-make clean
+	-make default
+	./convolve filters/pulse.filt images/square.png
