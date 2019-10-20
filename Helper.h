@@ -28,6 +28,7 @@ class Filter {
     int size;
     float ** array;
     float sum;
+    int offset;
 
     Filter() {
       size = 0;
@@ -54,20 +55,23 @@ class Filter {
             sumNeg += array[i][j];
         }
       }
+
       sum = sumPos;
-      float totSum = sumPos + sumNeg;
+      offset = 0;
+
       if (sumPos < abs(sumNeg))
         sum = sumNeg;
+      else if (sumPos == abs(sumNeg)) {
+        sum = 1;
+        offset = 128;
+      }
+
       for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
-          // printf("%4f ", array[i][j]);
           array[i][j] /= sum;
-          printf("%4f ", array[i][j]);
-          // array[i][j] /= totSum;
         }
-        cout << endl;
       }
-      cout << "-------END FILTER-------\n";
+      sum = sumPos;
       flipped = false;
     }
 
@@ -331,8 +335,6 @@ class Image {
         for (int j = 0; j < width * channels; j+=channels) {
           for (k = j; k < j + channels; k++) {
             // Populate the array of pixels to multiply against filter
-            // if (i == 1 && k == 0)
-            //   printf("%4f\n", pix[i][k]);
             if (i - (filter.size/2) < 0 || k - ((filter.size/2) * channels) < 0 || k + ((filter.size/2) * channels) >= (width * channels) || i + (filter.size / 2) >= height)
               continue;
             a = 0;
@@ -350,33 +352,16 @@ class Image {
               a++;  // next row
               b = 0;  // reset to first column
             }
-            if (k == 3 && i == 1) {
-              for (int z = 0; z < filter.size; z++) {
-                for (int y = 0; y < filter.size; y++) {
-                  printf("%4f ", temp[z][y]);
-                }
-                cout << endl;
-              }
-              cout << "------------------" << endl;
-            }
             a = 0;
             b = 0;
 
-            int m, n, o;
+            int m, n;
             // Multiply the filter * temp and store in result
             for (m = 0; m < filter.size; m++) {
                 for (n = 0; n < filter.size; n++) {
                     result[m][n] = 0;
-                    for (o = 0; o < filter.size; o++) {
-                        // if (temp[o][n] != DEFAULT_OUT_OF_BOUNDS_VALUE)
-                        result[m][n] += (filter.array[m][o] * temp[o][n]);
-                    }
-                    if (j == 3 && i == 1) {
-                      printf("%4f ", result[m][n]);
-                    }
+                    result[m][n] += (filter.array[m][n] * temp[m][n]);
                 }
-                if (j == 3 && i == 1)
-                  cout << endl;
             }
             float sum = 0;
             // sum the result and store in pix[i][k];
@@ -385,34 +370,16 @@ class Image {
                 sum += result[m][n];
               }
             }
-            // if (k == 3 && i == 1)
-            //   printf("\n%4f\n\n", sum);
-            // if ((sum) > 255.0)
-            //   pixels[(i*width*channels)+k] = 255;
-            // else
-            pixels[(i*width*channels)+k] = (unsigned char)(sum / filter.sum);
-            // pix[i][k] =  (unsigned char) (sum / filter.sum);
-            if (k == 3 && i == 1) {
-              printf("%4d--",pixels[(i*width*channels)+k]);
+            pixels[(i*width*channels)+k] = (unsigned char)((sum) + filter.offset);
+            if (sum + filter.offset < 0) {
+              pixels[(i*width*channels)+k] = abs(sum + filter.offset);
             }
-            if (pix[i][k] < 0)
-              pix[i][k] = abs(pix[i][k]);
+            if (abs(sum + filter.offset > 255))
+              pixels[(i*width*channels)+k] = 255;
             sum = 0;
           }
         }
       }
-
-      // copy 2d pixels back to 1d pixel array
-      // int j = 0;
-      // k = 0;
-      // for (int i = 0; i < width * height * channels; i++) {
-      //   pixels[i] = pix[j][k];
-      //   k++;
-      //   if (k == (width * channels)) {
-      //     k = 0;
-      //     j++;
-      //   }
-      // }
     }
 };
 
