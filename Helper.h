@@ -309,9 +309,14 @@ class Image {
     }
 
     void convolve(Filter filter) {
+      if (filter.array == NULL) {
+        cout  << "Filter not initialized, returning\n";
+        return;
+      }
       if (!filter.isFlipped()) {
         filter.flip();
       }
+
       float pix[height][width * channels];
       float temp[filter.size][filter.size];
       float result[filter.size][filter.size];
@@ -372,9 +377,9 @@ class Image {
             }
             pixels[(i*width*channels)+k] = (unsigned char)((sum) + filter.offset);
             if (sum + filter.offset < 0) {
-              pixels[(i*width*channels)+k] = abs(sum + filter.offset);
+              pixels[(i*width*channels)+k] = 0;
             }
-            if (abs(sum + filter.offset > 255))
+            if (abs(sum + filter.offset) > 255)
               pixels[(i*width*channels)+k] = 255;
             sum = 0;
           }
@@ -386,6 +391,7 @@ class Image {
 Image image = Image();
 Image originalImage = Image();
 Filter filt = Filter();
+string out = "";
 
 void handleKey(unsigned char key, int x, int y) {
   switch(key){
@@ -395,10 +401,14 @@ void handleKey(unsigned char key, int x, int y) {
       exit(0);
     case 'w':
     case 'W': {
-      string temp;
-      cout << "Enter the name of the output file: ";
-      cin >> temp;
-      image.writeImage(temp);
+      if (out == "") {
+        string temp;
+        cout << "Enter the name of the output file: ";
+        cin >> temp;
+        image.writeImage(temp);
+      } else {
+        image.writeImage(out);
+      }
       break;
     }
     case 'i':
@@ -413,6 +423,18 @@ void handleKey(unsigned char key, int x, int y) {
     case 'R':
       image.copy(originalImage);
       break;
+    case 'f':
+    case 'F': {
+      string temp;
+      cout << "Enter the file name of the new filter: ";
+      cin >> temp;
+      char * writable = new char[temp.size() + 1];
+      copy(temp.begin(), temp.end(), writable);
+      writable[temp.size()] = '\0'; // don't forget the terminating 0
+      filt = Filter(writable);
+      delete[] writable;
+      break;
+    }
     default:		// not a valid key -- just ignore it
       return;
   }

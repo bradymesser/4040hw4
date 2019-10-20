@@ -8,6 +8,8 @@ int main(int argc, char * argv[]) {
     image = Image(argv[2]);
     originalImage = Image(argv[2]);
     filt = Filter(argv[1]);
+    if (argc == 4)
+      out = argv[3];
   }
   filt.flip();
 
